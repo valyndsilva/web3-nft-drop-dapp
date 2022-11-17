@@ -1,8 +1,13 @@
 import Image from "next/image";
 import React from "react";
 import { Content, Header, MintBtn } from "../../components";
+import { useAddress } from "@thirdweb-dev/react";
 
 function NFTDrop() {
+  // Authentication
+  const address = useAddress();
+  console.log(address);
+
   return (
     <div className="flex h-screen flex-col lg:grid lg:grid-cols-10">
       {/* Left */}
@@ -28,10 +33,16 @@ function NFTDrop() {
 
       {/* Right */}
       <div className="flex flex-1 flex-col p-12 lg:col-span-6">
-        <Header/>
-        <hr className="my-2 border"/>
-        <Content/>
-        <MintBtn/>
+        <Header />
+        <hr className="my-2 border" />
+        {address && (
+          <p className="text-center text-sm text-rose-400">
+            You're logged in with wallet {address.substring(0, 5)}...
+            {address.substring(address.length - 5)}
+          </p>
+        )}
+        <Content />
+        <MintBtn />
       </div>
     </div>
   );

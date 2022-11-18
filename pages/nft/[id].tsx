@@ -2,11 +2,19 @@ import Image from "next/image";
 import React from "react";
 import { Content, Header, MintBtn } from "../../components";
 import { useAddress } from "@thirdweb-dev/react";
+import { GetServerSideProps } from "next";
+import { sanityClient, urlFor } from "../../sanity";
+import { Collection } from "../../typings";
 
-function NFTDrop() {
+interface Props {
+  collection: Collection;
+}
+
+function NFTDrop({ collection }: Props) {
   // Authentication
   const address = useAddress();
-  console.log(address);
+//   console.log(address);
+//   console.log(collection);
 
   return (
     <div className="flex h-screen flex-col lg:grid lg:grid-cols-10">
@@ -16,24 +24,24 @@ function NFTDrop() {
           <div className="bg-gradient-to-br from-yellow-400 to-purple-600 p-2 rounded-xl">
             <Image
               className="w-44 rounded-xl object-cover lg:h-96 lg:w-96"
-              src="/assets/1.png"
+              src={urlFor(collection.previewImage).url()}
               alt="Profile Picture"
               width={600}
               height={600}
             />
           </div>
           <div className="text-center p-5 space-y-2">
-            <h1 className="text-4xl font-bold text-white">Corgis</h1>
-            <h2 className="text-xl text-gray-300">
-              A collection of Corgis who live & breathe cuteness!
-            </h2>
+            <h1 className="text-4xl font-bold text-white">
+              {collection.nftCollectionName}
+            </h1>
+            <h2 className="text-xl text-gray-300">{collection.description}</h2>
           </div>
         </div>
       </div>
 
       {/* Right */}
       <div className="flex flex-1 flex-col p-12 lg:col-span-6">
-        <Header />
+        <Header collection={collection} />
         <hr className="my-2 border" />
         {address && (
           <p className="text-center text-sm text-rose-400">
@@ -41,7 +49,7 @@ function NFTDrop() {
             {address.substring(address.length - 5)}
           </p>
         )}
-        <Content />
+        <Content collection={collection} />
         <MintBtn />
       </div>
     </div>
@@ -49,3 +57,33 @@ function NFTDrop() {
 }
 
 export default NFTDrop;
+
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const query = `*[_type == "collection" && slug.current == $id][0]{
+  _id,
+  title,
+  address,
+  description,
+  nftCollectionName,
+  mainImage{asset},
+  previewImage{asset},
+  slug{current},
+  creator->{
+  _id,
+  name,
+  address,
+  bio,
+  slug{current},
+  }
+}`;
+
+  const collection = await sanityClient.fetch(query, { id: params?.id });
+  if (!collection) {
+    return {
+      notFound: true, // return 404 page
+    };
+  }
+  return {
+    props: { collection },
+  };
+};

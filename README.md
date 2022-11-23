@@ -1,27 +1,38 @@
-# Next.js + Tailwind CSS Example
+# NFT Drop ⚡
 
-This example shows how to use [Tailwind CSS](https://tailwindcss.com/) [(v3.2)](https://tailwindcss.com/blog/tailwindcss-v3-2) with Next.js. It follows the steps outlined in the official [Tailwind docs](https://tailwindcss.com/docs/guides/nextjs).
+## Tech Stack Used:
 
-## Deploy your own
+- [React](https://reactjs.org/)
+- [Next.js](https://nextjs.org/)
+- [Typescript](https://www.typescriptlang.org/)
+- [Third Web](https://thirdweb.com/)
+- [MetaMask](https://metamask.io/)
+- [Sanity CMS](https://www.sanity.io/)
+- [Tailwind CSS](https://tailwindcss.com/docs/guides/nextjs)
+- [React Hot Toast](https://react-hot-toast.com/)
 
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example) or preview live with [StackBlitz](https://stackblitz.com/github/vercel/next.js/tree/canary/examples/with-tailwindcss)
+## Demo
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/vercel/next.js/tree/canary/examples/with-tailwindcss&project-name=with-tailwindcss&repository-name=with-tailwindcss)
+Checkout the [demo here](https://web3-nft-drop-dapp.vercel.app/)
 
-## How to use
+### Sign In Using MetaMask
 
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
+On sign up, you get navigated to the choose plans page.
 
-```bash
-npx create-next-app --example with-tailwindcss with-tailwindcss-app
-```
+![Sign Up](/public/gifs/signin.gif)
 
-```bash
-yarn create next-app --example with-tailwindcss with-tailwindcss-app
-```
+### Minting NFT
 
-```bash
-pnpm create next-app --example with-tailwindcss with-tailwindcss-app
-```
+Once you have minted the NFT it will be available on OpenSea in your collections.
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
+![Mint NFT](/public/gifs/minting.gif)
+
+### Check OpenSea
+
+You can see your collections in OpenSea and also view the different traits for each NFT.
+
+![Update Plan](/public/gifs/opensea.gif)
+
+### Sign Out
+
+![Sign Out](/public/gifs/signout.gif)

@@ -8,11 +8,11 @@ interface Props {
   collections: Collection[];
 }
 const Home = ({ collections }: Props) => {
-  console.log({collections});
+  console.log({ collections });
   return (
     <div className="max-w-7xl mx-auto flex-col min-h-screen py-20 px-10 2xl:px-0">
       <Head>
-        <title>NFT Drop</title>
+        <title>The SILVA NFT Market Place</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 

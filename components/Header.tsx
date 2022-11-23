@@ -16,12 +16,27 @@ function Header({ collection }: Props) {
 
   return (
     <header className="flex items-center justify-between">
-      <Link href="/">
-        <h1 className="w-52 cursor-pointer text-xl font-extralight sm:w-80">
+      <Link href="/" className="flex items-center">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="1.5"
+          stroke="currentColor"
+          className="w-4 h-5 mr-2 font-extrabold"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M15.75 19.5L8.25 12l7.5-7.5"
+          />
+        </svg>
+
+        <h1 className="w-full cursor-pointer text-xl font-extralight">
           {" "}
           The{" "}
           <span className="uppercase font-extrabold underline decoration-pink-600/50">
-            {collection.nftCollectionName}
+            SILVA
           </span>{" "}
           NFT Market Place
         </h1>

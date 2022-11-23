@@ -1,11 +1,11 @@
 import Image from "next/image";
 import React from "react";
-import { Content, Header, MintBtn } from "../../components";
+import { Content, Header } from "../../components";
 import { useAddress } from "@thirdweb-dev/react";
 import { GetServerSideProps } from "next";
 import { sanityClient, urlFor } from "../../sanity";
 import { Collection } from "../../typings";
-
+import { Toaster } from "react-hot-toast";
 interface Props {
   collection: Collection;
 }
@@ -13,11 +13,12 @@ interface Props {
 function NFTDrop({ collection }: Props) {
   // Authentication
   const address = useAddress();
-//   console.log(address);
-//   console.log(collection);
+  //   console.log(address);
+  //   console.log(collection);
 
   return (
     <div className="flex h-screen flex-col lg:grid lg:grid-cols-10">
+      <Toaster position="bottom-center"/>
       {/* Left */}
       <div className="lg:col-span-4 bg-gradient-to-br from-cyan-800 to-rose-500">
         <div className="flex flex-col items-center justify-center py-2 lg:min-h-screen">
@@ -50,7 +51,6 @@ function NFTDrop({ collection }: Props) {
           </p>
         )}
         <Content collection={collection} />
-        <MintBtn />
       </div>
     </div>
   );

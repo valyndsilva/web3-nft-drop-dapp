@@ -8,6 +8,7 @@ interface Props {
   collections: Collection[];
 }
 const Home = ({ collections }: Props) => {
+  console.log({collections});
   return (
     <div className="max-w-7xl mx-auto flex-col min-h-screen py-20 px-10 2xl:px-0">
       <Head>
@@ -24,13 +25,10 @@ const Home = ({ collections }: Props) => {
         NFT Market Place
       </h1>
       <main className="bg-slate-100 p-10 shadow-xl shadow-rose-400/20">
-        <div className="grid space-x-3 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        <div className="grid space-x-3 md:grid-cols-2 lg:grid-cols-3">
           {collections.map((collection) => (
-            <Link href={`/nft/${collection.slug.current}`}>
-              <div
-                className="flex flex-col items-center cursor-pointer transition-all duration-200 hover:scale-105"
-                key={collection._id}
-              >
+            <Link key={collection._id} href={`/nft/${collection.slug.current}`}>
+              <div className="flex flex-col items-center cursor-pointer transition-all duration-200 hover:scale-105">
                 <Image
                   src={urlFor(collection.mainImage).url()}
                   alt=""

@@ -39,7 +39,7 @@ export default Home
 ```
 import Image from "next/image";
 import React from "react";
-import { Content, Header, MintBtn } from "../../components";
+import { Content, Header } from "../../components";
 
 function NFTDrop() {
   return (
@@ -70,7 +70,6 @@ function NFTDrop() {
         <Header/>
         <hr className="my-2 border"/>
         <Content/>
-        <MintBtn/>
       </div>
     </div>
   );
@@ -112,11 +111,13 @@ export default Header;
 #### Create components/Content.tsx:
 
 ```
-import Image from "next/image";
 import React from "react";
+import Image from "next/image";
+import MintBtn from "./MintBtn";
 
 function Content() {
   return (
+    <>
     <div className="mt-10 flex flex-1 flex-col items-center space-y-6 text-center lg:justify-center lg:space-y-0">
       <Image
         className="w-80 rounded-xl object-cover pb-10 lg:h-80 lg:w-80"
@@ -130,6 +131,8 @@ function Content() {
       </h1>
       <p className="pt-2 text-xl text-green-500"> 16 / 21 NFT's claimed</p>
     </div>
+    <MinBtn/>
+    </MinBtn>
   );
 }
 
@@ -247,7 +250,7 @@ export default Header;
 ```
 import Image from "next/image";
 import React from "react";
-import { Content, Header, MintBtn } from "../../components";
+import { Content, Header } from "../../components";
 import { useAddress } from "@thirdweb-dev/react";
 
 function NFTDrop() {
@@ -289,7 +292,6 @@ function NFTDrop() {
           </p>
         )}
         <Content />
-        <MintBtn />
       </div>
     </div>
   );
@@ -769,7 +771,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
 ```
 import Image from "next/image";
 import React from "react";
-import { Content, Header, MintBtn } from "../../components";
+import { Content, Header } from "../../components";
 import { useAddress } from "@thirdweb-dev/react";
 import { GetServerSideProps } from "next";
 import { sanityClient, urlFor } from "../../sanity";
@@ -819,7 +821,6 @@ function NFTDrop({ collection }: Props) {
           </p>
         )}
         <Content collection={collection} />
-        <MintBtn />
       </div>
     </div>
   );
@@ -960,4 +961,594 @@ NEXT_PUBLIC_SANITY_DATASET=...
 SANITY_API_TOKEN=...
 ```
 
-useNFTDrop() was deprecated so you must use useContract() and instead of "const nftDrop = useNFTDrop(collection.address)" use "const nftDrop = useContract(collection.address, "nft-drop").contract;"
+## Fetch Total Number of NFTs Claimed, Loading Animation and Fetch Price In Eth:
+
+### Update component/Content.tsx:
+
+```
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import { urlFor } from "../sanity";
+import { Collection } from "../typings";
+import { BigNumber } from "ethers";
+import { useAddress, useContract } from "@thirdweb-dev/react";
+import MintBtn from "./MintBtn";
+interface Props {
+  collection: Collection;
+}
+
+function Content({ collection }: Props) {
+  const address = useAddress();
+  //   console.log(address);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [claimedSupply, setClaimedSupply] = useState<number>(0);
+  const [totalSupply, setTotalSupply] = useState<BigNumber>();
+  const [priceInEth, setPriceInEth] = useState<string>();
+  const nftDrop = useContract(collection.address, "nft-drop").contract;
+  // console.log(nftDrop);
+
+  useEffect(() => {
+    if (!nftDrop) return;
+    // To make an async call inside useEffect Hook you need to do it in an inner function
+    const fetchNFTDropData = async () => {
+      setLoading(true);
+      const claimed = await nftDrop.getAllClaimed();
+      const total = await nftDrop.totalSupply();
+      setClaimedSupply(claimed.length);
+      setTotalSupply(total);
+      setLoading(false);
+    };
+    fetchNFTDropData();
+  }, [nftDrop]);
+
+  useEffect(() => {
+    if (!nftDrop) return;
+    const fetchPrice = async () => {
+      const claimConditions = await nftDrop.claimConditions.getAll();
+      setPriceInEth(claimConditions?.[0].currencyMetadata.displayValue);
+    };
+    fetchPrice();
+  }, [nftDrop]);
+
+  return (
+    <>
+      <div className="mt-10 flex flex-1 flex-col items-center space-y-6 text-center lg:justify-center lg:space-y-0">
+        <Image
+          className="w-80 rounded-xl object-cover pb-10 lg:h-80 lg:w-80"
+          src={urlFor(collection.mainImage).url()}
+          alt="Profile Picture"
+          width={600}
+          height={600}
+        />
+        <h1 className="text-3xl font-bold lg:text-5xl lg:font-extrabold">
+          {collection.title}
+        </h1>
+        {loading ? (
+          <p className="pt-2 text-xl text-green-500 animate-pulse">
+            Loading Supply Count...
+          </p>
+        ) : (
+          <p className="pt-2 text-xl text-green-500">
+            {claimedSupply} / {totalSupply?.toString()} NFT's claimed
+          </p>
+        )}
+        {loading && (
+          <Image
+            src="/assets/loader.gif"
+            width={320}
+            height={200}
+            className="object-contain"
+            alt="loader"
+          />
+        )}
+      </div>
+      <MintBtn
+        loading={loading}
+        claimedSupply={claimedSupply}
+        totalSupply={totalSupply!}
+        priceInEth ={priceInEth!}
+      />
+    </>
+  );
+}
+
+export default Content;
+
+```
+
+### Update component/MintBtn.tsx:
+
+```
+import { useAddress } from "@thirdweb-dev/react";
+import { BigNumber } from "ethers";
+import React from "react";
+interface Props {
+  loading: boolean;
+  claimedSupply: number;
+  totalSupply: BigNumber;
+  priceInEth: string;
+}
+function MintBtn({ loading, claimedSupply, totalSupply, priceInEth }: Props) {
+  // Authentication
+  const address = useAddress();
+  //   console.log(address);
+
+  return (
+    <button
+      disabled={
+        loading || claimedSupply === totalSupply?.toNumber() || !address
+      }
+      className="h-16 w-full mt-10 rounded-full bg-rose-500 text-white px-4 py-2 text-xs font-bold lg:px-5 lg:py-3 lg:text-base disabled:bg-gray-400"
+    >
+      {loading ? (
+        <>Loading</>
+      ) : claimedSupply === totalSupply?.toNumber() ? (
+        <>SOLD OUT</>
+      ) : !address ? (
+        <>Sign in to Mint</>
+      ) : (
+        <span className="font-bold">Mint NFT ({priceInEth} ETH)</span>
+      )}
+    </button>
+  );
+}
+
+export default MintBtn;
+
+
+```
+
+## Minting Functionality:
+
+### Update components/Content.tsx:
+
+```
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import { urlFor } from "../sanity";
+import { Collection } from "../typings";
+import { BigNumber } from "ethers";
+import { useAddress, useContract } from "@thirdweb-dev/react";
+import MintBtn from "./MintBtn";
+interface Props {
+  collection: Collection;
+}
+
+function Content({ collection }: Props) {
+  const address = useAddress();
+  //   console.log(address);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [claimedSupply, setClaimedSupply] = useState<number>(0);
+  const [totalSupply, setTotalSupply] = useState<BigNumber>();
+  const [priceInEth, setPriceInEth] = useState<string>();
+  const [quantity, setQuantity] = useState<string>("");
+
+  const nftDrop = useContract(collection.address, "nft-drop").contract;
+  // console.log(nftDrop);
+
+  useEffect(() => {
+    if (!nftDrop) return;
+    // To make an async call inside useEffect Hook you need to do it in an inner function
+    const fetchNFTDropData = async () => {
+      setLoading(true);
+      const claimed = await nftDrop.getAllClaimed();
+      const total = await nftDrop.totalSupply();
+      setClaimedSupply(claimed.length);
+      setTotalSupply(total);
+      setLoading(false);
+    };
+    fetchNFTDropData();
+  }, [nftDrop]);
+
+  useEffect(() => {
+    if (!nftDrop) return;
+    const fetchPrice = async () => {
+      const claimConditions = await nftDrop.claimConditions.getAll();
+      setPriceInEth(claimConditions?.[0].currencyMetadata.displayValue);
+    };
+    fetchPrice();
+  }, [nftDrop]);
+
+  const mintNft = () => {
+    if (!nftDrop || !address) return;
+    // const quantity = 1; // how many unique NFTs you want to claim
+    setLoading(true);
+    nftDrop
+      ?.claimTo(address, quantity)
+      .then(async (tx) => {
+        const receipt = tx[0].receipt; // the transaction receipt
+        const claimedTokenId = tx[0].id; // the id of NFT claimed
+        const claimedNFT = await tx[0].data(); // (optional) get the claimed NFT metadata
+        console.log(receipt);
+        console.log(claimedTokenId);
+        console.log(claimedNFT);
+      })
+      .catch((err) => {
+        console.log(err);
+      })
+      .finally(() => {
+        setLoading(false);
+        setQuantity("");
+      });
+  };
+  return (
+    <>
+      <div className="mt-10 flex flex-1 flex-col items-center space-y-6 text-center lg:justify-center lg:space-y-0">
+        <Image
+          className="w-80 rounded-xl object-cover pb-10 lg:h-80 lg:w-80"
+          src={urlFor(collection.mainImage).url()}
+          alt="Profile Picture"
+          width={600}
+          height={600}
+        />
+        <h1 className="text-3xl font-bold lg:text-5xl lg:font-extrabold">
+          {collection.title}
+        </h1>
+        {loading ? (
+          <p className="pt-2 text-xl text-green-500 animate-pulse">
+            Loading Supply Count...
+          </p>
+        ) : (
+          <p className="pt-2 text-xl text-green-500">
+            {claimedSupply} / {totalSupply?.toString()} NFT's claimed
+          </p>
+        )}
+        {loading && (
+          <Image
+            src="/assets/loader.gif"
+            width={320}
+            height={200}
+            className="object-contain"
+            alt="loader"
+          />
+        )}
+      </div>
+      <MintBtn
+        loading={loading}
+        claimedSupply={claimedSupply}
+        totalSupply={totalSupply!}
+        priceInEth={priceInEth!}
+        mintNft={mintNft}
+        quantity={quantity}
+        setQuantity={setQuantity}
+      />
+    </>
+  );
+}
+
+export default Content;
+
+```
+
+### Update components/Content.tsx:
+
+```
+import { useAddress } from "@thirdweb-dev/react";
+import { BigNumber } from "ethers";
+import React from "react";
+interface Props {
+  loading: boolean;
+  claimedSupply: number;
+  totalSupply: BigNumber;
+  priceInEth: string;
+  mintNft: () => void;
+  quantity: string;
+  setQuantity: (quantity: string) => void;
+}
+function MintBtn({
+  loading,
+  claimedSupply,
+  totalSupply,
+  priceInEth,
+  mintNft,
+  quantity,
+  setQuantity,
+}: Props) {
+  // Authentication
+  const address = useAddress();
+  //   console.log(address);
+
+  return (
+    <form onSubmit={mintNft} className="pt-5">
+      {address && (
+        <div className="flex items-center justify-center space-x-2">
+          <p className="text-sm  font-light text-gray-400">
+            Number of NFTs you wish to claim:
+          </p>
+          <input
+            className="border text-center items-center p-1 ml-3 text-sm"
+            type="number"
+            id="quantity"
+            name="quantity"
+            min="1"
+            max="5"
+            value={quantity}
+            onChange={(e) => setQuantity(e.target.value)}
+          />
+        </div>
+      )}
+
+      <button
+        type="submit"
+        disabled={
+          loading || claimedSupply === totalSupply?.toNumber() || !address
+        }
+        className="h-16 w-full mt-10 rounded-full bg-rose-500 text-white px-4 py-2 text-xs font-bold lg:px-5 lg:py-3 lg:text-base disabled:bg-gray-400"
+      >
+        {loading ? (
+          <>Loading</>
+        ) : claimedSupply === totalSupply?.toNumber() ? (
+          <>SOLD OUT</>
+        ) : !address ? (
+          <>Sign in to Mint</>
+        ) : (
+          <span className="font-bold">Mint NFT ({priceInEth} ETH)</span>
+        )}
+      </button>
+    </form>
+  );
+}
+
+export default MintBtn;
+
+```
+
+## Test MintBtn Functionality:
+
+## Login to OpenSea:
+
+Connect your Wallet (MetaMask) with OpenSea
+
+## Implementing Toaster Notifications:
+
+Install dependencies:
+
+```
+npm install react-hot-toast
+```
+
+### In pages/nft/[id].tsx:
+
+```
+import Image from "next/image";
+import React from "react";
+import { Content, Header } from "../../components";
+import { useAddress } from "@thirdweb-dev/react";
+import { GetServerSideProps } from "next";
+import { sanityClient, urlFor } from "../../sanity";
+import { Collection } from "../../typings";
+import { Toaster } from "react-hot-toast";
+interface Props {
+  collection: Collection;
+}
+
+function NFTDrop({ collection }: Props) {
+  // Authentication
+  const address = useAddress();
+  //   console.log(address);
+  //   console.log(collection);
+
+  return (
+    <div className="flex h-screen flex-col lg:grid lg:grid-cols-10">
+      <Toaster position="bottom-center"/>
+      {/* Left */}
+      <div className="lg:col-span-4 bg-gradient-to-br from-cyan-800 to-rose-500">
+        <div className="flex flex-col items-center justify-center py-2 lg:min-h-screen">
+          <div className="bg-gradient-to-br from-yellow-400 to-purple-600 p-2 rounded-xl">
+            <Image
+              className="w-44 rounded-xl object-cover lg:h-96 lg:w-96"
+              src={urlFor(collection.previewImage).url()}
+              alt="Profile Picture"
+              width={600}
+              height={600}
+            />
+          </div>
+          <div className="text-center p-5 space-y-2">
+            <h1 className="text-4xl font-bold text-white">
+              {collection.nftCollectionName}
+            </h1>
+            <h2 className="text-xl text-gray-300">{collection.description}</h2>
+          </div>
+        </div>
+      </div>
+
+      {/* Right */}
+      <div className="flex flex-1 flex-col p-12 lg:col-span-6">
+        <Header collection={collection} />
+        <hr className="my-2 border" />
+        {address && (
+          <p className="text-center text-sm text-rose-400">
+            You're logged in with wallet {address.substring(0, 5)}...
+            {address.substring(address.length - 5)}
+          </p>
+        )}
+        <Content collection={collection} />
+      </div>
+    </div>
+  );
+}
+
+export default NFTDrop;
+
+export const getServerSideProps: GetServerSideProps = async ({ params }) => {
+  const query = `*[_type == "collection" && slug.current == $id][0]{
+  _id,
+  title,
+  address,
+  description,
+  nftCollectionName,
+  mainImage{asset},
+  previewImage{asset},
+  slug{current},
+  creator->{
+  _id,
+  name,
+  address,
+  bio,
+  slug{current},
+  }
+}`;
+
+  const collection = await sanityClient.fetch(query, { id: params?.id });
+  if (!collection) {
+    return {
+      notFound: true, // return 404 page
+    };
+  }
+  return {
+    props: { collection },
+  };
+};
+
+```
+
+### Update components/Content.tsx:
+
+```
+import React, { useEffect, useState } from "react";
+import Image from "next/image";
+import { urlFor } from "../sanity";
+import { Collection } from "../typings";
+import { BigNumber } from "ethers";
+import { useAddress, useContract } from "@thirdweb-dev/react";
+import MintBtn from "./MintBtn";
+import toast from "react-hot-toast";
+interface Props {
+  collection: Collection;
+}
+
+function Content({ collection }: Props) {
+  const address = useAddress();
+  //   console.log(address);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [claimedSupply, setClaimedSupply] = useState<number>(0);
+  const [totalSupply, setTotalSupply] = useState<BigNumber>();
+  const [priceInEth, setPriceInEth] = useState<string>();
+  const [quantity, setQuantity] = useState<string>("");
+
+  const nftDrop = useContract(collection.address, "nft-drop").contract;
+  // console.log(nftDrop);
+
+  useEffect(() => {
+    if (!nftDrop) return;
+    // To make an async call inside useEffect Hook you need to do it in an inner function
+    const fetchNFTDropData = async () => {
+      setLoading(true);
+      const claimed = await nftDrop.getAllClaimed();
+      const total = await nftDrop.totalSupply();
+      setClaimedSupply(claimed.length);
+      setTotalSupply(total);
+      setLoading(false);
+    };
+    fetchNFTDropData();
+  }, [nftDrop]);
+
+  useEffect(() => {
+    if (!nftDrop) return;
+    const fetchPrice = async () => {
+      const claimConditions = await nftDrop.claimConditions.getAll();
+      setPriceInEth(claimConditions?.[0].currencyMetadata.displayValue);
+    };
+    fetchPrice();
+  }, [nftDrop]);
+
+  const mintNft = () => {
+    if (!nftDrop || !address) return;
+    // const quantity = 1; // how many unique NFTs you want to claim
+    setLoading(true);
+    const notification = toast.loading("Minting NFT...", {
+      style: {
+        background: "white",
+        color: "green",
+        fontWeight: "bolder",
+        fontSize: "17px",
+        padding: "20px",
+      },
+    });
+    nftDrop
+      ?.claimTo(address, quantity)
+      .then(async (tx) => {
+        const receipt = tx[0].receipt; // the transaction receipt
+        const claimedTokenId = tx[0].id; // the id of NFT claimed
+        const claimedNFT = await tx[0].data(); // (optional) get the claimed NFT metadata
+        console.log(receipt);
+        console.log(claimedTokenId);
+        console.log(claimedNFT);
+        toast("NFT Successfully Minted!", {
+          duration: 8000,
+          style: {
+            background: "green",
+            color: "white",
+            fontWeight: "bolder",
+            fontSize: "17px",
+            padding: "20px",
+          },
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        toast("Whoops... Something went wrong!", {
+          duration: 8000,
+          style: {
+            background: "red",
+            color: "white",
+            fontWeight: "bolder",
+            fontSize: "17px",
+            padding: "20px",
+          },
+        });
+      })
+      .finally(() => {
+        setLoading(false);
+        setQuantity("");
+        toast.dismiss(notification);
+      });
+  };
+  return (
+    <>
+      <div className="mt-10 flex flex-1 flex-col items-center space-y-6 text-center lg:justify-center lg:space-y-0">
+        <Image
+          className="w-80 rounded-xl object-cover pb-10 lg:h-80 lg:w-80"
+          src={urlFor(collection.mainImage).url()}
+          alt="Profile Picture"
+          width={600}
+          height={600}
+        />
+        <h1 className="text-3xl font-bold lg:text-5xl lg:font-extrabold">
+          {collection.title}
+        </h1>
+        {loading ? (
+          <p className="pt-2 text-xl text-green-500 animate-pulse">
+            Loading Supply Count...
+          </p>
+        ) : (
+          <p className="pt-2 text-xl text-green-500">
+            {claimedSupply} / {totalSupply?.toString()} NFT's claimed
+          </p>
+        )}
+        {loading && (
+          <Image
+            src="/assets/loader.gif"
+            width={320}
+            height={200}
+            className="object-contain"
+            alt="loader"
+          />
+        )}
+      </div>
+      <MintBtn
+        loading={loading}
+        claimedSupply={claimedSupply}
+        totalSupply={totalSupply!}
+        priceInEth={priceInEth!}
+        mintNft={mintNft}
+        quantity={quantity}
+        setQuantity={setQuantity}
+      />
+    </>
+  );
+}
+
+export default Content;
+
+```

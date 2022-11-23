@@ -16,7 +16,7 @@ const Home = ({ collections }: Props) => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <h1 className="mb-10 text-4xl w-52 cursor-pointer font-extralight sm:w-80">
+      <h1 className="mb-10 text-4xl w-full cursor-pointer font-extralight">
         {" "}
         The{" "}
         <span className="uppercase font-extrabold underline decoration-pink-600/50">

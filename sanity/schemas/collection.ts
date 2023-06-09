@@ -59,7 +59,7 @@ export default defineType({
 
   preview: {
     select: {
-      title: "question",
+      title: "title",
     },
   },
 });

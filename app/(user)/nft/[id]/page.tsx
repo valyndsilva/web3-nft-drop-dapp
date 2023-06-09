@@ -33,11 +33,11 @@ export default function page({ params }: Props) {
     fetchData();
   }, [collectionId]);
 
+if(!collection) return null
   return (
     <div className="flex h-screen flex-col lg:grid lg:grid-cols-10">
       <Toaster position="bottom-center" />
       {/* Left */}
-      {collection && (
         <div className="lg:col-span-4 bg-gradient-to-br from-cyan-800 to-rose-500">
           <div className="flex flex-col items-center justify-center py-2 lg:min-h-screen">
             <div className="bg-gradient-to-br from-yellow-400 to-purple-600 p-2 rounded-xl">
@@ -60,8 +60,7 @@ export default function page({ params }: Props) {
             </div>
           </div>
         </div>
-      )}
-
+      
       {/* Right */}
       <div className="flex flex-1 flex-col p-12 lg:col-span-6">
         <Header />
@@ -72,7 +71,7 @@ export default function page({ params }: Props) {
             {address.substring(address?.length - 5)}
           </p>
         )}
-        {collection && <Content collection={collection} />}
+         <Content collection={collection} />
       </div>
     </div>
   );

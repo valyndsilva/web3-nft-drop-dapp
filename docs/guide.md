@@ -1550,5 +1550,4 @@ function Content({ collection }: Props) {
 }
 
 export default Content;
-
 ```

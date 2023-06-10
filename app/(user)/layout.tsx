@@ -1,7 +1,7 @@
 import "app/globals.css";
 import { Inter } from "next/font/google";
 import { Metadata } from "next";
-import { Header, Navbar, Providers } from "./components";
+import { Footer, Header, Navbar, Providers } from "./components";
 
 export const metadata: Metadata = {
   title: "Home",
@@ -23,8 +23,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${inter.variable}`}>
-      <body className={`${inter.className} min-h-screen flex flex-col`}>
-        <Providers>{children}</Providers>
+      <body
+        className={`${inter.className} min-h-screen flex flex-col relative`}
+      >
+        <Providers>
+          {children}
+          <Footer />
+        </Providers>
       </body>
     </html>
   );

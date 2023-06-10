@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Navbar } from "@/app/(user)/components";
+import { Footer, Navbar } from "@/app/(user)/components";
 import { client } from "@/sanity/lib/client";
 import { collectionQuery } from "@/utils/queries";
 import { urlForImage } from "@/sanity/lib/image";
@@ -14,10 +14,10 @@ export default async function page({}: Props) {
   // console.log(collections);
 
   return (
-    <div className="max-w-7xl mx-auto flex-col min-h-screen py-20 px-10 2xl:px-0">
+    <div className="max-w-7xl mx-auto min-h-screen flex-col py-20 px-10 items-center">
       <Navbar />
-      <main className="flex  flex-col items-center justify-center border-2 border-gray-200 rounded-md h-[70vh] px-10">
-        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+      <main className="flex  flex-col items-center justify-center border-2 border-gray-200 rounded-md  px-10 py-20 mb-10">
+        <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3 space-y-12 md:space-y-0">
           {collections.map((collection: Collection) => (
             <Link key={collection._id} href={`/nft/${collection.slug.current}`}>
               <div className="flex flex-col items-center cursor-pointer transition-all duration-200 hover:scale-105">
@@ -42,6 +42,7 @@ export default async function page({}: Props) {
           ))}
         </div>
       </main>
+      
     </div>
   );
 }

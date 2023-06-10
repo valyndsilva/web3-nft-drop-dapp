@@ -35,7 +35,7 @@ export default function page({ params }: Props) {
 
 if(!collection) return null
   return (
-    <div className="flex h-screen flex-col lg:grid lg:grid-cols-10">
+    <div className="flex flex-col lg:grid lg:grid-cols-10 min-h-screen relative mb-20">
       <Toaster position="bottom-center" />
       {/* Left */}
         <div className="lg:col-span-4 bg-gradient-to-br from-cyan-800 to-rose-500">
